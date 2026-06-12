@@ -202,7 +202,7 @@ class Shop:
                 border = config.COLOR_GREEN
             elif is_sel:
                 glow = int(30 + 20 * math.sin(self._pulse))
-                border = (255, 220 + glow - 30, 80)
+                border = (255, min(255, 190 + glow), 80)
             if border:
                 pygame.draw.rect(self.screen, border, rect, 3, border_radius=8)
 

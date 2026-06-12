@@ -211,7 +211,7 @@ class BackgroundSelect:
             # selected border (pulsing glow)
             if is_sel:
                 glow = int(30 + 20 * math.sin(self._pulse))
-                border_color = (255, 220 + glow, 50)
+                border_color = (255, min(255, 220 + glow), 50)
                 pygame.draw.rect(self.screen, border_color, draw_rect, 3)
 
             # name label below card

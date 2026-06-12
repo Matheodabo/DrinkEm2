@@ -152,7 +152,7 @@ class RoundResults:
             self.screen.blit(panel, rect.topleft)
             if is_sel:
                 glow = int(30 + 20 * math.sin(self._pulse))
-                pygame.draw.rect(self.screen, (255, 220 + glow - 30, 80), rect, 3,
+                pygame.draw.rect(self.screen, (255, min(255, 190 + glow), 80), rect, 3,
                                  border_radius=6)
 
             # name

@@ -6,6 +6,8 @@ import pygame
 import config
 from scenes.background_select import BackgroundSelect
 from scenes.game import Game
+from scenes.round_results import RoundResults
+from scenes.player_setup import PlayerSetup
 
 SAVE_PATH = os.path.join(os.path.dirname(__file__), "save.json")
 
@@ -15,6 +17,7 @@ DEFAULT_SAVE = {
     "owned_skins": ["default"],
     "equipped_skin": "default",
     "last_bg": config.DEFAULT_BACKGROUND,
+    "players": [],
 }
 
 
@@ -40,10 +43,14 @@ def write_save(data):
 
 
 def make_scene(name, screen, save_data, payload=None):
+    if name == "player_setup":
+        return PlayerSetup(screen, save_data)
     if name == "bg_select":
         return BackgroundSelect(screen, save_data)
     if name == "game":
         return Game(screen, save_data, background=payload)
+    if name == "results":
+        return RoundResults(screen, save_data, payload)
     return BackgroundSelect(screen, save_data)
 
 
@@ -54,7 +61,9 @@ def main():
     clock = pygame.time.Clock()
 
     save_data = load_save()
-    current_scene = make_scene("bg_select", screen, save_data)
+    # first launch (or empty roster) starts at player setup
+    start_scene = "bg_select" if save_data.get("players") else "player_setup"
+    current_scene = make_scene(start_scene, screen, save_data)
 
     running = True
     while running:

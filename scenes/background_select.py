@@ -92,6 +92,7 @@ class BackgroundSelect:
         self._anim_t = 0.0          # 0..1, slides toward selected card
         self._anim_from = self.selected
         self._confirmed = False
+        self._edit_players = False
 
         # pulse for confirm button
         self._pulse = 0.0
@@ -107,6 +108,8 @@ class BackgroundSelect:
                 self._move(1)
             elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
                 self._confirm()
+            elif event.key == pygame.K_p:
+                self._edit_players = True
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
             # check if a card was clicked
@@ -233,8 +236,17 @@ class BackgroundSelect:
         self.screen.blit(hint, hint.get_rect(centerx=config.WINDOW_WIDTH // 2,
                                               bottom=config.WINDOW_HEIGHT - 20))
 
+        # roster-edit shortcut
+        if not self._confirmed:
+            ptext = self.font_hint.render("P — edit players", True, config.COLOR_WHITE)
+            ptext.set_alpha(150)
+            self.screen.blit(ptext, ptext.get_rect(centerx=config.WINDOW_WIDTH // 2,
+                                                    bottom=config.WINDOW_HEIGHT - 48))
+
     # --------------------------------------------------------- scene protocol
     def next_scene(self):
+        if self._edit_players:
+            return ("player_setup", None)
         if self._confirmed:
             return ("game", self.options[self.selected])
         return None

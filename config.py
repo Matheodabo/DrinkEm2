@@ -33,9 +33,17 @@ PIPE_GAP_CENTER_MAX = WINDOW_HEIGHT - GROUND_HEIGHT - 150
 
 # Collectibles
 BEER_RADIUS = 14
-BEER_SPAWN_CHANCE = 0.004   # per frame probability once a round is live
+BEER_SPAWN_CHANCE = 0.012    # per-frame probability once a round is live
+BEER_MAX_ACTIVE = 3          # cap simultaneous beers on screen
+BEER_MIN_GAP_FRAMES = 40     # cooldown between spawns so they don't cluster
+BEER_SPAWN_Y_MIN = 90
+BEER_SPAWN_Y_MAX = WINDOW_HEIGHT - GROUND_HEIGHT - 70
 CAP_RADIUS = 10
 CAP_SPAWN_CHANCE = 0.002
+
+# Players / sip assignment
+MAX_PLAYERS = 8
+MAX_NAME_LEN = 12
 
 # Colors (placeholders until real art lands)
 COLOR_SKY = (113, 197, 207)
@@ -44,12 +52,22 @@ COLOR_GROUND_STRIPE = (190, 160, 120)
 COLOR_BIRD = (255, 220, 50)
 COLOR_BIRD_OUTLINE = (200, 160, 20)
 COLOR_BEER = (255, 180, 0)
+COLOR_BEER_GLASS = (255, 184, 40)
+COLOR_BEER_GLASS_DARK = (205, 140, 20)
+COLOR_BEER_FOAM = (255, 250, 240)
+COLOR_BEER_HIGHLIGHT = (255, 215, 120)
 COLOR_CAP = (192, 192, 192)
 COLOR_WHITE = (255, 255, 255)
 COLOR_BLACK = (0, 0, 0)
 COLOR_RED = (220, 50, 50)
+COLOR_GREEN = (90, 210, 110)
 COLOR_DARK = (30, 30, 30)
 COLOR_OVERLAY = (0, 0, 0, 160)  # RGBA for semi-transparent overlays
+
+# Results / party screens (festive gradient)
+COLOR_PARTY_TOP = (60, 30, 90)
+COLOR_PARTY_BOT = (25, 15, 45)
+COLOR_HILIGHT_BAR = (255, 220, 80)
 
 # ── Backgrounds ──────────────────────────────────────────────────────────────
 # Each entry: id, display_name, and all the colors/params that define it.

@@ -33,7 +33,7 @@ so keep the core game loosely coupled from menus/shop/save systems.
 ## Milestones
 - [x] 1. Repo setup, this file, playable bird + pipes + score + game over
 - [x] 2. Three backgrounds + pre-round background selector
-- [ ] 3. Beer icon spawning/collection + post-round sip award screen
+- [x] 3. Beer icon spawning/collection + post-round sip award screen
 - [ ] 4. Bottle cap collectible + persistent JSON save
 - [ ] 5. Shop UI + 2–3 skins (placeholder art)
 - [ ] 6. Polish: sounds, menu flow, pause, small visual juice
@@ -45,12 +45,22 @@ so keep the core game loosely coupled from menus/shop/save systems.
 - Keep commits small and descriptive.
 
 ## Next session
-Start milestone 3: beer icon spawning/collection + post-round sip award screen.
-- Beer icons spawn randomly during a live round (config.BEER_SPAWN_CHANCE per frame).
-- Collecting a beer adds 1 sip to the round total; show count in HUD.
-- After death, transition to RoundResults scene: display sips earned, list player names
-  (entered at game start or carried from a lobby screen), let the player assign each sip
-  to a name via arrow keys / click, then return to BackgroundSelect.
+Start milestone 4: bottle cap collectible + persistent JSON save.
+- Caps spawn during a round (config.CAP_SPAWN_CHANCE), separate from beers, collected like beers.
+- Caps are PERSISTENT currency: add collected caps to save_data["caps"] on round end and
+  write save.json (save already persists; just feed caps in). Show cap total in HUD + game over.
+- Add a bottle-cap drawing to art.py (mirror art.draw_beer). Reuse the Beer entity pattern for a
+  Cap entity in scenes/game.py (consider refactoring Beer/Cap into a shared Collectible base).
+- save.json already round-trips high_score/caps/owned_skins/equipped_skin/last_bg/players.
+
+## Flow / architecture notes (current)
+- Scenes return either a string or a (name, payload) tuple from next_scene(); main.make_scene routes.
+  Scene names: "player_setup", "bg_select", "game", "results".
+- Startup: player_setup if save["players"] empty, else bg_select.
+- Roster persists in save["players"]; edit anytime via "P" on the stage selector.
+- Game collects beers -> self.sips. On death with sips>0 AND players present -> ("results", sips);
+  otherwise normal play-again / Esc-to-stage. RoundResults assigns sips -> back to bg_select.
+- Shared placeholder art lives in art.py (art.draw_beer) so HUD/entity/results stay visually consistent.
 
 ## Open decisions
 - Player names for sip assignment: entered at game start? (lean yes, simple text entry)

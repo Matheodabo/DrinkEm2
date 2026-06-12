@@ -50,3 +50,51 @@ COLOR_BLACK = (0, 0, 0)
 COLOR_RED = (220, 50, 50)
 COLOR_DARK = (30, 30, 30)
 COLOR_OVERLAY = (0, 0, 0, 160)  # RGBA for semi-transparent overlays
+
+# ── Backgrounds ──────────────────────────────────────────────────────────────
+# Each entry: id, display_name, and all the colors/params that define it.
+# Game.draw() reads the active background dict — no if/else chains needed.
+
+BACKGROUNDS = [
+    {
+        "id": "day",
+        "name": "Sunny Day",
+        "sky_top":    (100, 180, 255),
+        "sky_bot":    (180, 230, 255),
+        "cloud_color": (255, 255, 255),
+        "ground":     (120, 200, 80),
+        "ground_stripe": (100, 175, 65),
+        "pipe":       (50, 160, 50),
+        "pipe_outline": (30, 110, 30),
+        "sun_moon":   (255, 230, 50),   # sun
+        "accent":     (255, 220, 80),
+    },
+    {
+        "id": "night",
+        "name": "Night Out",
+        "sky_top":    (10, 10, 40),
+        "sky_bot":    (30, 30, 80),
+        "cloud_color": (60, 60, 100),
+        "ground":     (25, 60, 25),
+        "ground_stripe": (20, 45, 20),
+        "pipe":       (20, 100, 20),
+        "pipe_outline": (10, 60, 10),
+        "sun_moon":   (240, 240, 200),  # moon
+        "accent":     (150, 150, 255),
+    },
+    {
+        "id": "sunset",
+        "name": "Golden Hour",
+        "sky_top":    (220, 80, 40),
+        "sky_bot":    (255, 180, 80),
+        "cloud_color": (255, 140, 80),
+        "ground":     (160, 100, 40),
+        "ground_stripe": (130, 80, 30),
+        "pipe":       (180, 90, 30),
+        "pipe_outline": (120, 55, 15),
+        "sun_moon":   (255, 220, 50),
+        "accent":     (255, 100, 50),
+    },
+]
+
+DEFAULT_BACKGROUND = "day"

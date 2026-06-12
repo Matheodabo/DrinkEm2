@@ -32,7 +32,7 @@ so keep the core game loosely coupled from menus/shop/save systems.
 
 ## Milestones
 - [x] 1. Repo setup, this file, playable bird + pipes + score + game over
-- [ ] 2. Three backgrounds + pre-round background selector
+- [x] 2. Three backgrounds + pre-round background selector
 - [ ] 3. Beer icon spawning/collection + post-round sip award screen
 - [ ] 4. Bottle cap collectible + persistent JSON save
 - [ ] 5. Shop UI + 2–3 skins (placeholder art)
@@ -45,10 +45,12 @@ so keep the core game loosely coupled from menus/shop/save systems.
 - Keep commits small and descriptive.
 
 ## Next session
-Start milestone 2: three selectable backgrounds + pre-round background picker screen.
-- Add 3 distinct placeholder backgrounds (solid color + styled elements) to `assets/backgrounds/`.
-- New `BackgroundSelect` scene shown after MainMenu, before Game; player picks with arrow keys / click.
-- Pass chosen background ID into `Game`; `Game._draw_background()` renders the right one.
+Start milestone 3: beer icon spawning/collection + post-round sip award screen.
+- Beer icons spawn randomly during a live round (config.BEER_SPAWN_CHANCE per frame).
+- Collecting a beer adds 1 sip to the round total; show count in HUD.
+- After death, transition to RoundResults scene: display sips earned, list player names
+  (entered at game start or carried from a lobby screen), let the player assign each sip
+  to a name via arrow keys / click, then return to BackgroundSelect.
 
 ## Open decisions
 - Player names for sip assignment: entered at game start? (lean yes, simple text entry)

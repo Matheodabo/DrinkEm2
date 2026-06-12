@@ -32,14 +32,22 @@ PIPE_GAP_CENTER_MIN = 150   # pixels from top
 PIPE_GAP_CENTER_MAX = WINDOW_HEIGHT - GROUND_HEIGHT - 150
 
 # Collectibles
-BEER_RADIUS = 14
-BEER_SPAWN_CHANCE = 0.012    # per-frame probability once a round is live
-BEER_MAX_ACTIVE = 3          # cap simultaneous beers on screen
-BEER_MIN_GAP_FRAMES = 40     # cooldown between spawns so they don't cluster
-BEER_SPAWN_Y_MIN = 90
-BEER_SPAWN_Y_MAX = WINDOW_HEIGHT - GROUND_HEIGHT - 70
-CAP_RADIUS = 10
-CAP_SPAWN_CHANCE = 0.002
+COLLECTIBLE_RADIUS = 14         # shared draw/hitbox size
+BEER_RADIUS = COLLECTIBLE_RADIUS  # kept for art.draw_beer's default
+COLLECTIBLE_SPAWN_CHANCE = 0.016  # per-frame chance to spawn one once live
+COLLECTIBLE_MAX_ACTIVE = 3
+COLLECTIBLE_MIN_GAP_FRAMES = 35   # cooldown so they don't cluster
+COLLECTIBLE_Y_MIN = 90
+COLLECTIBLE_Y_MAX = WINDOW_HEIGHT - GROUND_HEIGHT - 70
+
+# Data-driven collectible catalog. `reward` is "sip" (round-local) or "caps"
+# (persistent currency). `weight` controls spawn rarity. `sprite` -> art.draw_<sprite>.
+COLLECTIBLES = {
+    "beer":   {"sprite": "beer",    "reward": "sip",  "amount": 1, "weight": 48, "spin": False},
+    "cap":    {"sprite": "cap",     "reward": "caps", "amount": 1, "weight": 34, "spin": False},
+    "cigbox": {"sprite": "cig_box", "reward": "caps", "amount": 3, "weight": 13, "spin": False},
+    "fidget": {"sprite": "fidget",  "reward": "caps", "amount": 5, "weight": 5,  "spin": True},
+}
 
 # Players / sip assignment
 MAX_PLAYERS = 8

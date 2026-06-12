@@ -34,8 +34,8 @@ so keep the core game loosely coupled from menus/shop/save systems.
 - [x] 1. Repo setup, this file, playable bird + pipes + score + game over
 - [x] 2. Three backgrounds + pre-round background selector
 - [x] 3. Beer icon spawning/collection + post-round sip award screen
-- [ ] 4. Bottle cap collectible + persistent JSON save
-- [ ] 5. Shop UI + 2–3 skins (placeholder art)
+- [x] 4. Bottle cap collectible + persistent JSON save
+- [x] 5. Shop UI + skins/accessories (placeholder art)
 - [ ] 6. Polish: sounds, menu flow, pause, small visual juice
 
 ## Session workflow (important)
@@ -45,22 +45,39 @@ so keep the core game loosely coupled from menus/shop/save systems.
 - Keep commits small and descriptive.
 
 ## Next session
-Start milestone 4: bottle cap collectible + persistent JSON save.
-- Caps spawn during a round (config.CAP_SPAWN_CHANCE), separate from beers, collected like beers.
-- Caps are PERSISTENT currency: add collected caps to save_data["caps"] on round end and
-  write save.json (save already persists; just feed caps in). Show cap total in HUD + game over.
-- Add a bottle-cap drawing to art.py (mirror art.draw_beer). Reuse the Beer entity pattern for a
-  Cap entity in scenes/game.py (consider refactoring Beer/Cap into a shared Collectible base).
-- save.json already round-trips high_score/caps/owned_skins/equipped_skin/last_bg/players.
+Start milestone 6: polish — sounds, menu flow, pause, small visual juice.
+- Sounds: flap, collect (beer vs cap distinct), crash, button click. Put .wav/.ogg in assets/sounds/,
+  load centrally, add a global mute toggle persisted in save.
+- A proper MainMenu landing scene (currently startup goes straight to player_setup/bg_select).
+- Pause (P or Esc) during live play with resume/quit-to-menu.
+- Juice: screen shake on crash, particle burst on collect, parallax clouds, score pop scale.
 
 ## Flow / architecture notes (current)
-- Scenes return either a string or a (name, payload) tuple from next_scene(); main.make_scene routes.
-  Scene names: "player_setup", "bg_select", "game", "results".
+- Scenes return a string or (name, payload) tuple from next_scene(); main.make_scene routes.
+  Scene names: "player_setup", "bg_select", "game", "results", "shop".
 - Startup: player_setup if save["players"] empty, else bg_select.
-- Roster persists in save["players"]; edit anytime via "P" on the stage selector.
-- Game collects beers -> self.sips. On death with sips>0 AND players present -> ("results", sips);
-  otherwise normal play-again / Esc-to-stage. RoundResults assigns sips -> back to bg_select.
-- Shared placeholder art lives in art.py (art.draw_beer) so HUD/entity/results stay visually consistent.
+- From bg_select: P -> player_setup, S -> shop. Both return to bg_select.
+- Collectibles are data-driven in config.COLLECTIBLES (sprite/reward/amount/weight/spin). reward is
+  "sip" (round-local -> RoundResults) or "caps" (persistent currency). Kinds: beer/cap/cigbox/fidget.
+  Game.Collectible is the single entity class; spawn is weighted-random via _spawn_kind().
+- Caps bank into save["caps"] once in Game._die() (idempotent via caps_banked flag).
+- Cosmetics: cosmetics.py catalog (id/name/slot/price/draw). One item per slot
+  (hat/eyes/neck/face/legs). save["owned"] (ids) + save["equipped"] (slot->id).
+  cosmetics.equipped_list(save) -> dicts; Bird(worn) renders via art.draw_dressed_bird.
+- Shop: buy (deduct caps, auto-equip), toggle equip/unequip, scrollable 2-col grid + fitting-room
+  preview bird. Reachable via S on bg_select.
+- ALL sprites are vector-drawn in art.py: collectibles (draw_beer/cap/cig_box/fidget) and accessories
+  (draw_top_hat/party_hat/cap_hat/crown/glasses/sunglasses/goggles/bowtie/chain/mustache/pants).
+  Swap for real sprites by keeping the (surface, cx, cy, r) signatures.
+- save["owned_skins"]/["equipped_skin"] from earlier are obsolete; new code uses owned/equipped.
+
+## How to run / test
+- Run: `python3 main.py` (uses pygame-ce; standard pygame needs SDL2 headers we don't have).
+- Keyboard + mouse only — NO game controller needed. Flap = Space or left-click.
+- Multiplayer = local hot-seat (one screen): set a roster in PlayerSetup, then after a run with
+  beers you assign sips to players on the RoundResults screen. Nothing networked.
+- Headless smoke test pattern (no window): set SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy and drive
+  scenes by feeding pygame KEYDOWN/MOUSEBUTTONDOWN events, asserting on save/scene state.
 
 ## Open decisions
 - Player names for sip assignment: entered at game start? (lean yes, simple text entry)

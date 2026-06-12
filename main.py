@@ -8,14 +8,15 @@ from scenes.background_select import BackgroundSelect
 from scenes.game import Game
 from scenes.round_results import RoundResults
 from scenes.player_setup import PlayerSetup
+from scenes.shop import Shop
 
 SAVE_PATH = os.path.join(os.path.dirname(__file__), "save.json")
 
 DEFAULT_SAVE = {
     "high_score": 0,
     "caps": 0,
-    "owned_skins": ["default"],
-    "equipped_skin": "default",
+    "owned": [],            # owned cosmetic ids
+    "equipped": {},         # slot -> cosmetic id
     "last_bg": config.DEFAULT_BACKGROUND,
     "players": [],
 }
@@ -51,6 +52,8 @@ def make_scene(name, screen, save_data, payload=None):
         return Game(screen, save_data, background=payload)
     if name == "results":
         return RoundResults(screen, save_data, payload)
+    if name == "shop":
+        return Shop(screen, save_data)
     return BackgroundSelect(screen, save_data)
 
 

@@ -3,6 +3,7 @@ import random
 import math
 import config
 import art
+import cosmetics
 
 
 def _lerp_color(c1, c2, t):
@@ -10,12 +11,13 @@ def _lerp_color(c1, c2, t):
 
 
 class Bird:
-    def __init__(self):
+    def __init__(self, worn=None):
         self.x = config.BIRD_X
         self.y = config.WINDOW_HEIGHT // 2
         self.vel_y = 0.0
         self.alive = True
         self.angle = 0.0
+        self.worn = worn or []   # equipped cosmetic dicts
 
     def flap(self):
         self.vel_y = config.FLAP_STRENGTH
@@ -31,17 +33,8 @@ class Bird:
         return pygame.Rect(self.x - r + 4, self.y - r + 4, r * 2 - 8, r * 2 - 8)
 
     def draw(self, surface):
-        cx, cy = int(self.x), int(self.y)
-        r = config.BIRD_RADIUS
-        pygame.draw.circle(surface, config.COLOR_BIRD, (cx, cy), r)
-        pygame.draw.circle(surface, config.COLOR_BIRD_OUTLINE, (cx, cy), r, 2)
-        ex = cx + int(r * 0.4 * math.cos(math.radians(-self.angle)))
-        ey = cy + int(r * 0.4 * math.sin(math.radians(-self.angle))) - 3
-        pygame.draw.circle(surface, config.COLOR_WHITE, (ex, ey), 5)
-        pygame.draw.circle(surface, config.COLOR_BLACK, (ex + 1, ey), 2)
-        wx = cx - int(r * 0.3)
-        wy = cy + int(r * 0.2)
-        pygame.draw.ellipse(surface, config.COLOR_BIRD_OUTLINE, (wx - 8, wy - 4, 14, 8))
+        art.draw_dressed_bird(surface, int(self.x), int(self.y),
+                              config.BIRD_RADIUS, self.worn, self.angle)
 
 
 class Pipe:
@@ -78,33 +71,42 @@ class Pipe:
             pygame.draw.rect(surface, po, cap, 2)
 
 
-class Beer:
-    """A collectible beer mug that drifts left and bobs gently."""
+class Collectible:
+    """A pickup that drifts left and bobs gently. `kind` keys config.COLLECTIBLES."""
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, kind):
+        self.kind = kind
+        self.spec = config.COLLECTIBLES[kind]
         self.x = float(x)
         self.y = float(y)        # base height; visual bobs around this
         self.bob = random.uniform(0, math.tau)
+        self.spin = 0.0
         self.collected = False
 
     def update(self):
         self.x -= config.PIPE_SPEED
         self.bob += 0.12
+        if self.spec["spin"]:
+            self.spin += 0.3
 
     def render_y(self):
         return self.y + math.sin(self.bob) * 4
 
     def is_off_screen(self):
-        return self.x < -2 * config.BEER_RADIUS
+        return self.x < -2 * config.COLLECTIBLE_RADIUS
 
     def get_rect(self):
-        r = config.BEER_RADIUS
-        w = int(r * 1.6)
+        r = config.COLLECTIBLE_RADIUS
+        w = int(r * 1.8)
         h = int(r * 2.2)
         return pygame.Rect(int(self.x - w / 2), int(self.render_y() - h / 2), w, h)
 
     def draw(self, surface):
-        art.draw_beer(surface, self.x, self.render_y())
+        fn = getattr(art, "draw_" + self.spec["sprite"])
+        if self.spec["spin"]:
+            fn(surface, self.x, self.render_y(), config.COLLECTIBLE_RADIUS, self.spin)
+        else:
+            fn(surface, self.x, self.render_y(), config.COLLECTIBLE_RADIUS)
 
 
 class Game:
@@ -123,6 +125,7 @@ class Game:
             )
         self.bg = background
         self._sky_surf = self._bake_sky()
+        self.worn = cosmetics.equipped_list(save_data)
 
         self.font_large = pygame.font.SysFont(None, 72)
         self.font_med = pygame.font.SysFont(None, 42)
@@ -140,14 +143,16 @@ class Game:
         return surf
 
     def _reset(self):
-        self.bird = Bird()
+        self.bird = Bird(self.worn)
         self.pipes = []
-        self.beers = []
-        self.popups = []          # floating "+1" effects on collect
+        self.collectibles = []
+        self.popups = []          # floating "+N" effects on collect
         self.pipe_timer = 0
-        self.beer_cooldown = 0
+        self.collectible_cooldown = 0
         self.score = 0
         self.sips = 0
+        self.caps_earned = 0
+        self.caps_banked = False
         self.state = "countdown"
         self.countdown_val = self.COUNTDOWN
         self.countdown_timer = 0
@@ -220,8 +225,8 @@ class Game:
                 self.score += 1
         self.pipes = [p for p in self.pipes if not p.is_off_screen()]
 
-        # beers
-        self._update_beers()
+        # collectibles
+        self._update_collectibles()
 
         # collision: pipes
         bird_rect = self.bird.get_rect()
@@ -235,27 +240,44 @@ class Game:
         if self.bird.y - config.BIRD_RADIUS < 0 or self.bird.y + config.BIRD_RADIUS > ground_y:
             self._die()
 
-    def _update_beers(self):
-        if self.beer_cooldown > 0:
-            self.beer_cooldown -= 1
+    def _spawn_kind(self):
+        kinds = list(config.COLLECTIBLES.keys())
+        weights = [config.COLLECTIBLES[k]["weight"] for k in kinds]
+        return random.choices(kinds, weights=weights, k=1)[0]
+
+    def _update_collectibles(self):
+        if self.collectible_cooldown > 0:
+            self.collectible_cooldown -= 1
 
         # spawn
-        if (self.beer_cooldown == 0
-                and len(self.beers) < config.BEER_MAX_ACTIVE
-                and random.random() < config.BEER_SPAWN_CHANCE):
-            y = random.randint(config.BEER_SPAWN_Y_MIN, config.BEER_SPAWN_Y_MAX)
-            self.beers.append(Beer(config.WINDOW_WIDTH + 20, y))
-            self.beer_cooldown = config.BEER_MIN_GAP_FRAMES
+        if (self.collectible_cooldown == 0
+                and len(self.collectibles) < config.COLLECTIBLE_MAX_ACTIVE
+                and random.random() < config.COLLECTIBLE_SPAWN_CHANCE):
+            y = random.randint(config.COLLECTIBLE_Y_MIN, config.COLLECTIBLE_Y_MAX)
+            self.collectibles.append(Collectible(config.WINDOW_WIDTH + 20, y, self._spawn_kind()))
+            self.collectible_cooldown = config.COLLECTIBLE_MIN_GAP_FRAMES
 
         bird_rect = self.bird.get_rect()
-        for beer in self.beers:
-            beer.update()
-            if not beer.collected and beer.get_rect().colliderect(bird_rect):
-                beer.collected = True
-                self.sips += 1
-                self.popups.append({"x": beer.x, "y": beer.render_y(), "t": 32})
+        for c in self.collectibles:
+            c.update()
+            if not c.collected and c.get_rect().colliderect(bird_rect):
+                c.collected = True
+                self._collect(c)
 
-        self.beers = [b for b in self.beers if not b.collected and not b.is_off_screen()]
+        self.collectibles = [c for c in self.collectibles
+                             if not c.collected and not c.is_off_screen()]
+
+    def _collect(self, c):
+        spec = c.spec
+        amount = spec["amount"]
+        if spec["reward"] == "sip":
+            self.sips += amount
+            color = config.COLOR_BEER_HIGHLIGHT
+        else:
+            self.caps_earned += amount
+            color = (235, 235, 240)
+        self.popups.append({"x": c.x, "y": c.render_y(), "t": 32,
+                            "text": f"+{amount}", "color": color})
 
     def _update_popups(self):
         for p in self.popups:
@@ -269,14 +291,18 @@ class Game:
         self.dead_timer = 0
         if self.score > self.save_data.get("high_score", 0):
             self.save_data["high_score"] = self.score
+        # bank caps once — persistent currency, survives regardless of sip flow
+        if not self.caps_banked:
+            self.save_data["caps"] = self.save_data.get("caps", 0) + self.caps_earned
+            self.caps_banked = True
 
     # ------------------------------------------------------------------- draw
     def draw(self):
         self._draw_background()
         for pipe in self.pipes:
             pipe.draw(self.screen)
-        for beer in self.beers:
-            beer.draw(self.screen)
+        for c in self.collectibles:
+            c.draw(self.screen)
         self._draw_ground()
         self.bird.draw(self.screen)
         self._draw_popups()
@@ -314,7 +340,7 @@ class Game:
     def _draw_popups(self):
         for p in self.popups:
             alpha = int(255 * (p["t"] / 32))
-            surf = self.font_small.render("+1", True, config.COLOR_BEER_HIGHLIGHT)
+            surf = self.font_small.render(p["text"], True, p["color"])
             surf.set_alpha(alpha)
             self.screen.blit(surf, surf.get_rect(center=(int(p["x"]), int(p["y"]))))
 
@@ -328,10 +354,20 @@ class Game:
 
         # sip counter, top-left with a little mug
         art.draw_beer(self.screen, 26, 30, r=12)
-        sip_surf = self.font_hud.render(f"x {self.sips}", True, config.COLOR_WHITE)
-        sip_shadow = self.font_hud.render(f"x {self.sips}", True, config.COLOR_DARK)
-        self.screen.blit(sip_shadow, (44, 16))
-        self.screen.blit(sip_surf, (42, 14))
+        self._hud_label(f"x {self.sips}", 42, 14)
+
+        # caps counter, top-right with a bottle cap
+        caps_total = self.save_data.get("caps", 0) + self.caps_earned
+        cap_text = f"{caps_total}"
+        art.draw_cap(self.screen, config.WINDOW_WIDTH - 26, 30, r=11)
+        tw = self.font_hud.size("x " + cap_text)[0]
+        self._hud_label(f"x {cap_text}", config.WINDOW_WIDTH - 42 - tw, 14)
+
+    def _hud_label(self, text, x, y):
+        shadow = self.font_hud.render(text, True, config.COLOR_DARK)
+        surf = self.font_hud.render(text, True, config.COLOR_WHITE)
+        self.screen.blit(shadow, (x + 2, y + 2))
+        self.screen.blit(surf, (x, y))
 
     def _draw_countdown(self):
         label = str(self.countdown_val) if self.countdown_val > 0 else "GO!"
@@ -347,7 +383,7 @@ class Game:
         self.screen.blit(overlay, (0, 0))
 
         cx = config.WINDOW_WIDTH // 2
-        y = config.WINDOW_HEIGHT // 2 - 120
+        y = config.WINDOW_HEIGHT // 2 - 150
 
         title = self.font_large.render("Game Over", True, config.COLOR_RED)
         self.screen.blit(title, title.get_rect(centerx=cx, top=y))
@@ -369,7 +405,19 @@ class Game:
             lrect = label.get_rect(centerx=cx + 14, top=y)
             self.screen.blit(label, lrect)
             art.draw_beer(self.screen, lrect.left - 18, lrect.centery, r=12)
-            y += 56
+            y += 44
+
+        # caps earned line, with a cap
+        if self.caps_earned > 0:
+            total = self.save_data.get("caps", 0)
+            label = self.font_med.render(
+                f"+{self.caps_earned} caps  (total {total})", True, (235, 235, 240))
+            lrect = label.get_rect(centerx=cx + 14, top=y)
+            self.screen.blit(label, lrect)
+            art.draw_cap(self.screen, lrect.left - 16, lrect.centery, r=11)
+            y += 50
+        else:
+            y += 6
 
         if self.dead_timer > 60:
             if self.sips > 0 and self._has_players():

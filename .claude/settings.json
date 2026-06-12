@@ -1,17 +1,6 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(git *)",
-      "Bash(python3 *)",
-      "Bash(python *)",
-      "Bash(pip3 *)",
-      "Bash(pip *)",
-      "Bash(ls *)",
-      "Bash(ls)",
-      "Bash(find *)",
-      "Bash(mkdir *)",
-      "Bash(rm *)"
-    ],
+    "defaultMode": "bypassPermissions",
     "deny": [
       "Bash(rm -rf *)",
       "Bash(rm -fr *)"

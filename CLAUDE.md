@@ -31,7 +31,7 @@ so keep the core game loosely coupled from menus/shop/save systems.
 - Commit at the end of every milestone with a clear message.
 
 ## Milestones
-- [ ] 1. Repo setup, this file, playable bird + pipes + score + game over
+- [x] 1. Repo setup, this file, playable bird + pipes + score + game over
 - [ ] 2. Three backgrounds + pre-round background selector
 - [ ] 3. Beer icon spawning/collection + post-round sip award screen
 - [ ] 4. Bottle cap collectible + persistent JSON save
@@ -45,8 +45,10 @@ so keep the core game loosely coupled from menus/shop/save systems.
 - Keep commits small and descriptive.
 
 ## Next session
-Start milestone 1: initialize repo, set up pygame project skeleton
-(main.py, config.py, scenes/), get a bird flapping through pipes with score.
+Start milestone 2: three selectable backgrounds + pre-round background picker screen.
+- Add 3 distinct placeholder backgrounds (solid color + styled elements) to `assets/backgrounds/`.
+- New `BackgroundSelect` scene shown after MainMenu, before Game; player picks with arrow keys / click.
+- Pass chosen background ID into `Game`; `Game._draw_background()` renders the right one.
 
 ## Open decisions
 - Player names for sip assignment: entered at game start? (lean yes, simple text entry)

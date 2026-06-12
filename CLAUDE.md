@@ -72,7 +72,10 @@ Start milestone 6: polish — sounds, menu flow, pause, small visual juice.
 - save["owned_skins"]/["equipped_skin"] from earlier are obsolete; new code uses owned/equipped.
 
 ## How to run / test
-- Run: `python3 main.py` (uses pygame-ce; standard pygame needs SDL2 headers we don't have).
+- Easiest: double-click `run.command` in Finder (self-installs pygame-ce if missing).
+- Terminal: `python3 main.py` (uses pygame-ce; standard pygame needs SDL2 headers we don't have).
+- Name entry uses pygame TEXTINPUT events (KEYDOWN.unicode is unreliable on macOS); main.py calls
+  pygame.key.start_text_input(). If the window has no keyboard focus on launch, click it once.
 - Keyboard + mouse only — NO game controller needed. Flap = Space or left-click.
 - Multiplayer = local hot-seat (one screen): set a roster in PlayerSetup, then after a run with
   beers you assign sips to players on the RoundResults screen. Nothing networked.

@@ -61,6 +61,7 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((config.WINDOW_WIDTH, config.WINDOW_HEIGHT))
     pygame.display.set_caption(config.TITLE)
+    pygame.key.start_text_input()   # ensure TEXTINPUT events for name entry
     clock = pygame.time.Clock()
 
     save_data = load_save()

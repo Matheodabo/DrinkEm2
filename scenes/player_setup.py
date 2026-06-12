@@ -20,6 +20,7 @@ class PlayerSetup:
         self.save_data = save_data
         self.players = list(save_data.get("players", []))
         self.text = ""
+        self._got_textinput = False
         self._done = False
         self._cursor_t = 0.0
         self._pulse = 0.0
@@ -42,12 +43,23 @@ class PlayerSetup:
 
     # ----------------------------------------------------------------- input
     def handle_input(self, event):
+        # TEXTINPUT is the reliable cross-platform path for typed characters
+        # (handles shift/layout/IME). KEYDOWN below only covers control keys,
+        # plus a unicode fallback if this environment never emits TEXTINPUT.
+        if event.type == pygame.TEXTINPUT:
+            self._got_textinput = True
+            ch = event.text
+            if ch and ch.isprintable() and len(self.text) < config.MAX_NAME_LEN:
+                self.text += ch
+            return
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self._submit()
             elif event.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-1]
-            elif event.unicode and event.unicode.isprintable() and event.unicode not in ("\r", "\n"):
+            elif (not self._got_textinput and event.unicode
+                    and event.unicode.isprintable() and event.unicode not in ("\r", "\n")):
                 if len(self.text) < config.MAX_NAME_LEN:
                     self.text += event.unicode
 
